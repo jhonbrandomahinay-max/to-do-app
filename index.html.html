@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My First To-Do App</title>
+<style>
+  :root {
+    --bg: #f1f3f7; --card: #ffffff; --text: #1f2430; --muted: #6b7384;
+    --accent: #e8a800; --accent-text: #2a1d00; --border: #d3d7e0; --danger: #d6293a;
+    --chrome: linear-gradient(135deg, #f4f6f9 0%, #c3c9d2 22%, #fafbfc 42%, #a9b0bb 66%, #e9ecf0 85%, #b8bec8 100%);
+    --silver: linear-gradient(135deg, #ffffff, #b9bfc9 30%, #f2f4f6 50%, #9aa1ad 75%, #e6e8ec);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171d; --card: #1c1f27; --text: #eceef5; --muted: #9aa1b2;
+      --accent: #ffc933; --accent-text: #2a1d00; --border: #3a3f4d; --danger: #ff6b70;
+      --chrome: linear-gradient(135deg, #1b1e24 0%, #4b525d 22%, #23272e 42%, #6a727e 66%, #2a2e36 85%, #454c57 100%);
+      --silver: linear-gradient(135deg, #ffffff, #9aa1ad 30%, #e6e8ec 50%, #7b8390 75%, #d4d7dd);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15171d; --card: #1c1f27; --text: #eceef5; --muted: #9aa1b2;
+    --accent: #ffc933; --accent-text: #2a1d00; --border: #3a3f4d; --danger: #ff6b70;
+    --chrome: linear-gradient(135deg, #1b1e24 0%, #4b525d 22%, #23272e 42%, #6a727e 66%, #2a2e36 85%, #454c57 100%);
+    --silver: linear-gradient(135deg, #ffffff, #9aa1ad 30%, #e6e8ec 50%, #7b8390 75%, #d4d7dd);
+    color-scheme: dark;
+  }
+  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--chrome); background-attachment: fixed; color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; justify-content: center; align-items: center; min-height: 100%; padding: 32px 16px;
+  }
+  .app { width: 100%; max-width: 720px; }
+  h1 { margin: 0 0 6px; font-size: 2.6rem; text-align: center; }
+  .shine {
+    background: linear-gradient(110deg, #7d8591 0%, #f4f6f8 20%, #9aa1ad 40%, #ffffff 55%, #7d8591 75%, #d5d9df 100%);
+    background-size: 250% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,.45));
+    animation: shimmer 3.5s linear infinite;
+  }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+  @media (prefers-reduced-motion: reduce) { .shine { animation: none; } }
+  .sub { color: var(--text); opacity: .75; margin: 0 0 24px; text-align: center; font-size: 1.1rem; }
+  .card {
+    border: 4px solid transparent; border-radius: 22px; padding: 28px;
+    background:
+      radial-gradient(circle at var(--mx, 50%) var(--my, 0%), rgba(255,200,40,.16), transparent 50%) padding-box,
+      linear-gradient(var(--card), var(--card)) padding-box,
+      var(--silver) border-box;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  .add { display: flex; gap: 8px; }
+  input[type="text"] {
+    flex: 1; min-width: 0; padding: 16px 18px; font-size: 1.2rem;
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--bg); color: var(--text);
+  }
+  input[type="text"]:focus { outline: 2px solid var(--accent); }
+  button {
+    font: inherit; cursor: pointer; border: none; border-radius: 10px;
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  }
+  button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+  button:active { transform: scale(.94); }
+  .add button:hover { box-shadow: 0 6px 16px rgba(232,168,0,.55); }
+  .add button {
+    padding: 0 26px; font-size: 1.1rem; background: linear-gradient(135deg, #ffe27a, var(--accent) 50%, #c98a00); color: var(--accent-text); font-weight: 700;
+  }
+  ul { list-style: none; margin: 16px 0 0; padding: 0; }
+  li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 8px; font-size: 1.25rem; border-bottom: 1px solid var(--border);
+  }
+  li:last-child { border-bottom: none; }
+  li span { flex: 1; word-break: break-word; }
+  li.done span { text-decoration: line-through; color: var(--muted); }
+  li input { width: 28px; height: 28px; accent-color: var(--accent); cursor: pointer; }
+  .del { background: transparent; color: var(--danger); font-size: 1.2rem; padding: 4px 8px; }
+  .footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 14px; color: var(--muted); font-size: .9rem;
+  }
+  .clear { background: transparent; color: var(--muted); text-decoration: underline; }
+  .empty { text-align: center; color: var(--muted); padding: 20px 0 6px; }
+  li:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); border-radius: 8px; }
+  li.new { animation: pop .35s ease; }
+  @keyframes pop { from { transform: scale(.85) translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .bar { height: 8px; border-radius: 99px; background: var(--border); margin-top: 14px; overflow: hidden; }
+  #barFill { height: 100%; width: 0; background: linear-gradient(90deg, #c98a00, #ffe27a); transition: width .4s ease; }
+  .clear:hover { color: var(--accent); }
+  .notes { margin-top: 22px; }
+  .notes label { display: block; font-weight: 600; margin-bottom: 8px; }
+  .notes textarea {
+    width: 100%; resize: vertical; padding: 14px 16px; font: inherit; font-size: 1.05rem;
+    border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text);
+  }
+  .notes textarea:focus { outline: 2px solid var(--accent); }
+  .bit { position: fixed; width: 9px; height: 9px; border-radius: 2px; pointer-events: none; z-index: 99; }
+</style>
+</head>
+<body>
+  <main class="app">
+    <h1>✅ <span class="shine">My To-Do List</span></h1>
+    <p class="sub">My very first app. Add a task, check it off, delete it.</p>
+    <div class="card">
+      <div class="add">
+        <input type="text" id="taskInput" placeholder="What do you need to do?" maxlength="120">
+        <button id="addBtn">Add</button>
+      </div>
+      <div class="bar"><div id="barFill"></div></div>
+      <ul id="list"></ul>
+      <div class="footer">
+        <span id="count"></span>
+        <button class="clear" id="clearBtn">Clear done</button>
+      </div>
+      <div class="notes">
+        <label for="noteBox">📝 Notes</label>
+        <textarea id="noteBox" rows="4" placeholder="Write a note here…"></textarea>
+      </div>
+    </div>
+  </main>
+
+<script>
+  // 1. The data: a list of tasks
+  let tasks = [];
+  let justAdded = false;
+
+  // 2. Load saved tasks (wrapped in try/catch in case storage isn’t available)
+  try {
+    tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+  } catch (e) { tasks = []; }
+
+  const list = document.getElementById("list");
+  const input = document.getElementById("taskInput");
+  const count = document.getElementById("count");
+
+  function save() {
+    try { localStorage.setItem("tasks", JSON.stringify(tasks)); } catch (e) {}
+  }
+
+  // 3. Draw the tasks on the screen
+  function render() {
+    list.innerHTML = "";
+    if (tasks.length === 0) {
+      list.innerHTML = '<li class="empty" style="display:block;border:none">Nothing here yet. Add your first task!</li>';
+    }
+    tasks.forEach((task, i) => {
+      const li = document.createElement("li");
+      if (task.done) li.classList.add("done");
+      if (justAdded && i === tasks.length - 1) li.classList.add("new");
+
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = task.done;
+      box.onchange = () => {
+        if (box.checked) { const r = box.getBoundingClientRect(); burst(r.left + 10, r.top + 10); }
+        tasks[i].done = box.checked; save(); render();
+      };
+
+      const text = document.createElement("span");
+      text.textContent = task.text;
+
+      const del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "✕";
+      del.setAttribute("aria-label", "Delete task");
+      del.onclick = () => { tasks.splice(i, 1); save(); render(); };
+
+      li.append(box, text, del);
+      list.appendChild(li);
+    });
+    const left = tasks.filter(t => !t.done).length;
+    count.textContent = left + (left === 1 ? " task left" : " tasks left");
+    const pct = tasks.length ? Math.round((tasks.length - left) / tasks.length * 100) : 0;
+    document.getElementById("barFill").style.width = pct + "%";
+    justAdded = false;
+  }
+
+  // 4. Add a new task
+  function addTask() {
+    const value = input.value.trim();
+    if (!value) return;
+    tasks.push({ text: value, done: false });
+    justAdded = true;
+    input.value = "";
+    save(); render();
+  }
+
+  document.getElementById("addBtn").onclick = addTask;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") addTask(); });
+  document.getElementById("clearBtn").onclick = () => {
+    tasks = tasks.filter(t => !t.done);
+    save(); render();
+  };
+
+  // Notes box: saved as you type
+  const noteBox = document.getElementById("noteBox");
+  try { noteBox.value = localStorage.getItem("note") || ""; } catch (e) {}
+  noteBox.addEventListener("input", () => {
+    try { localStorage.setItem("note", noteBox.value); } catch (e) {}
+  });
+
+  // Confetti burst when you finish a task
+  function burst(x, y) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const colors = ["#ffd700", "#f5b301", "#ffe27a", "#c98a00", "#ffffff"];
+    for (let n = 0; n < 18; n++) {
+      const bit = document.createElement("div");
+      bit.className = "bit";
+      bit.style.left = x + "px"; bit.style.top = y + "px";
+      bit.style.background = colors[n % colors.length];
+      document.body.appendChild(bit);
+      const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 70;
+      bit.animate([
+        { transform: "translate(0,0) rotate(0)", opacity: 1 },
+        { transform: "translate(" + Math.cos(a) * d + "px," + (Math.sin(a) * d + 30) + "px) rotate(360deg)", opacity: 0 }
+      ], { duration: 700, easing: "ease-out" }).onfinish = () => bit.remove();
+    }
+  }
+
+  // A pink glow follows your mouse over the card
+  const card = document.querySelector(".card");
+  card.addEventListener("mousemove", e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty("--mx", (e.clientX - r.left) + "px");
+    card.style.setProperty("--my", (e.clientY - r.top) + "px");
+  });
+
+  render();
+</script>
+</body>
+</html>
